@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; }
+        .header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 22px; font-weight: 600; color: #6C63FF; }
+        .header p { font-size: 13px; color: #888; }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+        .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #333; }
+        textarea, input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-family: inherit;
+            background: #fafafa;
+            color: #333;
+        }
+        textarea { height: 80px; resize: none; }
+        button {
+            background: #6C63FF;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+        }
+        button:hover { background: #5a52d5; }
+        .result {
+            display: none;
+            margin-top: 16px;
+            background: #f8f7ff;
+            border: 1px solid #e8e6ff;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+        }
+        .loading { color: #6C63FF; font-size: 13px; margin-top: 10px; display: none; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .hashtags { color: #6C63FF; word-break: break-all; }
+        .copy-btn {
+            background: transparent;
+            border: 1px solid #6C63FF;
+            color: #6C63FF;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            width: auto;
+            margin-top: 8px;
+            float: right;
+        }
+        .copy-btn:hover { background: #f8f7ff; }
+        .trial-banner {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .trial-banner a {
+            background: #6C63FF;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            padding: 36px;
+            max-width: 520px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-box h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #333; }
+        .modal-box p { font-size: 14px; color: #888; margin-bottom: 24px; }
+        .modal-box label { font-size: 13px; color: #555; display: block; margin-bottom: 6px; font-weight: 500; }
+        .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+        .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0e0e0; }
+        .step-dot.active { background: #6C63FF; }
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            transition: all 0.2s;
+        }
+        .option-btn.selected {
+            border-color: #6C63FF;
+            background: #f8f7ff;
+            color: #6C63FF;
+            font-weight: 500;
+        }
+        .option-btn:hover { border-color: #6C63FF; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-back {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #888;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            width: auto;
+        }
+        .btn-next {
+            background: #6C63FF;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+        }
+        .btn-next:hover { background: #5a52d5; }
+        .profile-panel {
+            display: none;
+            position: fixed;
+            top: 0; right: 0;
+            width: 380px;
+            height: 100%;
+            background: white;
+            border-left: 1px solid #eee;
+            z-index: 999;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .profile-panel.active { display: block; }
+        .profile-panel h2 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .close-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            width: auto;
+            color: #888;
+        }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .header { padding: 16px 20px; }
+            .option-grid { grid-template-columns: 1fr; }
+            .profile-panel { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>ReachUp AI</h1>
+        <p id="brand-name-display">Your AI social media growth assistant</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span id="usage-badge" style="font-size: 13px; color: #888;"></span>
+        <a id="admin-link" href="/admin" style="display:none; font-size: 13px; color: #e53935;
+            text-decoration: none; border: 1px solid #e53935;
+            padding: 6px 14px; border-radius: 8px;">Admin</a>
+        <button onclick="openProfile()" style="width:auto; font-size: 13px; background: white;
+            color: #6C63FF; border: 1px solid #6C63FF; padding: 6px 14px; border-radius: 8px;">
+            My Profile
+        </button>
+        <a href="/pricing" style="font-size: 13px; color: #6C63FF; text-decoration: none;
+            border: 1px solid #6C63FF; padding: 6px 14px; border-radius: 8px;">Upgrade</a>
+        <a href="/logout" style="font-size: 13px; color: #888; text-decoration: none;
+            border: 1px solid #eee; padding: 6px 14px; border-radius: 8px;">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div id="trial-banner" class="trial-banner" style="display:none;">
+        <span id="trial-banner-text"></span>
+        <a href="/pricing">Upgrade Now</a>
+    </div>
+
+    <div class="card">
+        <h2>✨ AI Caption Generator</h2>
+        <textarea id="photo-desc" placeholder="Describe your photo... e.g. bride at golden hour by the lake in Lahore"></textarea>
+        <button onclick="generateCaption()">Generate Caption</button>
+        <p class="loading" id="caption-loading">Generating your caption...</p>
+        <div class="result" id="caption-result"></div>
+        <button class="copy-btn" id="copy-caption" onclick="copyResult('caption-result')" style="display:none;">Copy</button>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2># Smart Hashtag Engine</h2>
+            <select id="photo-type">
+                <option>Wedding photography</option>
+                <option>Portrait session</option>
+                <option>Pre-wedding shoot</option>
+                <option>Event photography</option>
+            </select>
+            <select id="city">
+                <option>Lahore</option>
+                <option>Karachi</option>
+                <option>Islamabad</option>
+                <option>Dubai</option>
+                <option>London</option>
+            </select>
+            <button onclick="generateHashtags()">Generate Hashtags</button>
+            <p class="loading" id="hashtag-loading">Finding best hashtags...</p>
+            <div class="result hashtags" id="hashtag-result"></div>
+            <button class="copy-btn" id="copy-hashtag" onclick="copyResult('hashtag-result')" style="display:none;">Copy</button>
+        </div>
+
+        <div class="card">
+            <h2>📢 AI Ad Copy Generator</h2>
+            <input type="text" id="service-input" placeholder="e.g. Wedding photography Lahore" />
+            <input type="text" id="audience-input" placeholder="e.g. Couples getting married in 2025" />
+            <button onclick="generateAd()">Generate Ad Copy</button>
+            <p class="loading" id="ad-loading">Writing your ad copy...</p>
+            <div class="result" id="ad-result"></div>
+            <button class="copy-btn" id="copy-ad" onclick="copyResult('ad-result')" style="display:none;">Copy</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📅 Monthly Content Calendar</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+                <label>Business Type</label>
+                <select id="cal-business">
+                    <option>Wedding Photography</option>
+                    <option>Portrait Photography</option>
+                    <option>Travel Business</option>
+                    <option>Salon</option>
+                </select>
+            </div>
+            <div>
+                <label>City</label>
+                <select id="cal-city">
+                    <option>Lahore</option>
+                    <option>Karachi</option>
+                    <option>Islamabad</option>
+                    <option>Dubai</option>
+                </select>
+            </div>
+            <div>
+                <label>Month</label>
+                <select id="cal-month">
+                    <option>July</option>
+                    <option>August</option>
+                    <option>September</option>
+                    <option>October</option>
+                    <option>November</option>
+                    <option>December</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="generateCalendar()">Generate My Content Plan</button>
+        <p class="loading" id="calendar-loading">Building your content calendar...</p>
+        <div class="result" id="calendar-result" style="white-space: pre-line;"></div>
+        <button class="copy-btn" id="copy-calendar" onclick="copyResult('calendar-result')" style="display:none;">Copy</button>
+    </div>
+
+    <div class="card">
+        <h2>💬 DM Inquiry Response Generator</h2>
+        <select id="inquiry-type">
+            <option>Asking about price</option>
+            <option>Asking about availability</option>
+            <option>Asking about packages</option>
+            <option>General interest</option>
+            <option>Asking to see portfolio</option>
+        </select>
+        <textarea id="client-message" placeholder="Paste what the client wrote to you..."></textarea>
+        <button onclick="generateDM()">Generate Perfect Response</button>
+        <p class="loading" id="dm-loading">Writing your response...</p>
+        <div class="result" id="dm-result"></div>
+        <button class="copy-btn" id="copy-dm" onclick="copyResult('dm-result')" style="display:none;">Copy</button>
+    </div>
+
+    <div class="card">
+        <h2>⏰ Best Posting Time Optimizer</h2>
+        <input type="text" id="ptime-business" placeholder="e.g. Wedding photography" />
+        <input type="text" id="ptime-audience" placeholder="e.g. Engaged couples aged 22-35" />
+        <select id="ptime-city">
+            <option>Lahore</option>
+            <option>Karachi</option>
+            <option>Islamabad</option>
+            <option>Dubai</option>
+            <option>London</option>
+        </select>
+        <button onclick="getPostingTime()">Find My Best Posting Times</button>
+        <p class="loading" id="ptime-loading">Analyzing best times...</p>
+        <div class="result" id="ptime-result" style="white-space: pre-line;"></div>
+        <button class="copy-btn" id="copy-ptime" onclick="copyResult('ptime-result')" style="display:none;">Copy</button>
+    </div>
+
+    <div class="card">
+        <h2>🔍 Competitor Analysis</h2>
+        <input type="text" id="competitor-handle" placeholder="Competitor Instagram handle e.g. @saraphotography" />
+        <input type="text" id="your-business" placeholder="Your business type e.g. Wedding photography" />
+        <select id="competitor-city">
+            <option>Lahore</option>
+            <option>Karachi</option>
+            <option>Islamabad</option>
+            <option>Dubai</option>
+            <option>London</option>
+        </select>
+        <button onclick="analyzeCompetitor()">Analyze Competitor</button>
+        <p class="loading" id="competitor-loading">Analyzing your competitor...</p>
+        <div class="result" id="competitor-result" style="white-space: pre-line;"></div>
+        <button class="copy-btn" id="copy-competitor" onclick="copyResult('competitor-result')" style="display:none;">Copy</button>
+    </div>
+
+</div>
+
+<!-- ONBOARDING MODAL -->
+<div class="modal-overlay" id="onboarding-modal">
+    <div class="modal-box">
+        <h2>Welcome to ReachUp AI! 👋</h2>
+        <p>Tell us about your brand so we can personalize everything for you.</p>
+
+        <div class="step-indicator">
+            <div class="step-dot active" id="dot-1"></div>
+            <div class="step-dot" id="dot-2"></div>
+            <div class="step-dot" id="dot-3"></div>
+            <div class="step-dot" id="dot-4"></div>
+            <div class="step-dot" id="dot-5"></div>
+        </div>
+
+        <div id="step-1">
+            <label>What is your Studio / Brand Name?</label>
+            <input type="text" id="ob-brand" placeholder="e.g. Ahmed Clicks, Noor Photography" />
+            <div class="nav-buttons">
+                <button class="btn-next" onclick="nextStep(1)">Next →</button>
+            </div>
+        </div>
+
+        <div id="step-2" style="display:none;">
+            <label>Your Photography Style?</label>
+            <div class="option-grid">
+                <button class="option-btn" onclick="selectOption(this, 'style')">📸 Candid</button>
+                <button class="option-btn" onclick="selectOption(this, 'style')">🎭 Traditional</button>
+                <button class="option-btn" onclick="selectOption(this, 'style')">🎬 Cinematic</button>
+                <button class="option-btn" onclick="selectOption(this, 'style')">✨ Mix of All</button>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="prevStep(2)">← Back</button>
+                <button class="btn-next" onclick="nextStep(2)">Next →</button>
+            </div>
+        </div>
+
+        <div id="step-3" style="display:none;">
+            <label>Who are your typical clients?</label>
+            <div class="option-grid">
+                <button class="option-btn" onclick="selectOption(this, 'client')">💼 Middle Class</button>
+                <button class="option-btn" onclick="selectOption(this, 'client')">🏠 Upper Middle</button>
+                <button class="option-btn" onclick="selectOption(this, 'client')">💎 Elite</button>
+                <button class="option-btn" onclick="selectOption(this, 'client')">🌍 All Types</button>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="prevStep(3)">← Back</button>
+                <button class="btn-next" onclick="nextStep(3)">Next →</button>
+            </div>
+        </div>
+
+        <div id="step-4" style="display:none;">
+            <label>Your Instagram Tone?</label>
+            <div class="option-grid">
+                <button class="option-btn" onclick="selectOption(this, 'tone')">👔 Professional</button>
+                <button class="option-btn" onclick="selectOption(this, 'tone')">😊 Friendly</button>
+                <button class="option-btn" onclick="selectOption(this, 'tone')">💖 Emotional</button>
+                <button class="option-btn" onclick="selectOption(this, 'tone')">✍️ Poetic</button>
+            </div>
+            <label style="margin-top: 16px;">Language preference for captions?</label>
+            <div class="option-grid">
+                <button class="option-btn" onclick="selectOption(this, 'lang')">🇬🇧 English Only</button>
+                <button class="option-btn" onclick="selectOption(this, 'lang')">🇵🇰 Urdu Only</button>
+                <button class="option-btn" onclick="selectOption(this, 'lang')">🌐 Mix of Both</button>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="prevStep(4)">← Back</button>
+                <button class="btn-next" onclick="nextStep(4)">Next →</button>
+            </div>
+        </div>
+
+        <div id="step-5" style="display:none;">
+            <label>Paste 1-2 captions you loved before <span style="color:#aaa; font-weight:400;">(optional but powerful)</span></label>
+            <textarea id="ob-samples" style="height: 120px;" placeholder="Paste your best captions here..."></textarea>
+            <div class="nav-buttons">
+                <button class="btn-back" onclick="prevStep(5)">← Back</button>
+                <button class="btn-next" onclick="saveOnboarding()">🚀 Start Using ReachUp</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- PROFILE PANEL -->
+<div class="profile-panel" id="profile-panel">
+    <button class="close-panel" onclick="closeProfile()">✕</button>
+    <h2>My Brand Profile</h2>
+
+    <label>Brand Name</label>
+    <input type="text" id="prof-brand" placeholder="Your studio name" />
+
+    <label>Photography Style</label>
+    <select id="prof-style">
+        <option value="Candid">📸 Candid</option>
+        <option value="Traditional">🎭 Traditional</option>
+        <option value="Cinematic">🎬 Cinematic</option>
+        <option value="Mix of All">✨ Mix of All</option>
+    </select>
+
+    <label>Typical Clients</label>
+    <select id="prof-client">
+        <option value="Middle Class">💼 Middle Class</option>
+        <option value="Upper Middle">🏠 Upper Middle</option>
+        <option value="Elite">💎 Elite</option>
+        <option value="All Types">🌍 All Types</option>
+    </select>
+
+    <label>Instagram Tone</label>
+    <select id="prof-tone">
+        <option value="Professional">👔 Professional</option>
+        <option value="Friendly">😊 Friendly</option>
+        <option value="Emotional">💖 Emotional</option>
+        <option value="Poetic">✍️ Poetic</option>
+    </select>
+
+    <label>Language Preference</label>
+    <select id="prof-lang">
+        <option value="English Only">🇬🇧 English Only</option>
+        <option value="Urdu Only">🇵🇰 Urdu Only</option>
+        <option value="Mix of Both">🌐 Mix of Both</option>
+    </select>
+
+    <label>City</label>
+    <select id="prof-city">
+        <option value="Lahore">Lahore</option>
+        <option value="Karachi">Karachi</option>
+        <option value="Islamabad">Islamabad</option>
+        <option value="Dubai">Dubai</option>
+        <option value="London">London</option>
+    </select>
+
+    <label>Sample Captions (your writing style)</label>
+    <textarea id="prof-samples" style="height: 100px;" placeholder="Paste captions that represent your style..."></textarea>
+
+    <button onclick="saveProfile()" style="margin-top: 8px;">Save Profile</button>
+    <p id="profile-save-msg" style="color: #16a34a; font-size: 13px; margin-top: 8px; display:none;">✓ Profile saved!</p>
+</div>
+
+<script>
+let selectedOptions = { style: '', client: '', tone: '', lang: '' };
+
+function selectOption(btn, type) {
+    const grid = btn.parentElement;
+    grid.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedOptions[type] = btn.textContent.trim();
+}
+
+function nextStep(current) {
+    document.getElementById(`step-${current}`).style.display = 'none';
+    document.getElementById(`step-${current + 1}`).style.display = 'block';
+    document.getElementById(`dot-${current}`).classList.remove('active');
+    document.getElementById(`dot-${current + 1}`).classList.add('active');
+}
+
+function prevStep(current) {
+    document.getElementById(`step-${current}`).style.display = 'none';
+    document.getElementById(`step-${current - 1}`).style.display = 'block';
+    document.getElementById(`dot-${current}`).classList.remove('active');
+    document.getElementById(`dot-${current - 1}`).classList.add('active');
+}
+
+async function saveOnboarding() {
+    const brandName = document.getElementById('ob-brand').value.trim();
+    const sampleCaptions = document.getElementById('ob-samples').value.trim();
+
+    try {
+        const response = await fetch('/onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                brand_name: brandName,
+                photography_style: selectedOptions.style,
+                client_type: selectedOptions.client,
+                instagram_tone: selectedOptions.tone,
+                language_preference: selectedOptions.lang,
+                sample_captions: sampleCaptions
+            })
+        });
+        const data = await response.json();
+        if (data.message) {
+            document.getElementById('onboarding-modal').classList.remove('active');
+            document.getElementById('brand-name-display').textContent =
+                brandName ? `Welcome, ${brandName}!` : 'Your AI social media growth assistant';
+        }
+    } catch (error) {
+        alert('Something went wrong. Please try again.');
+    }
+}
+
+function openProfile() {
+    document.getElementById('profile-panel').classList.add('active');
+    loadProfile();
+}
+
+function closeProfile() {
+    document.getElementById('profile-panel').classList.remove('active');
+}
+
+async function loadProfile() {
+    try {
+        const response = await fetch('/get-profile');
+        const data = await response.json();
+
+        document.getElementById('prof-brand').value = data.brand_name || '';
+        document.getElementById('prof-samples').value = data.sample_captions || '';
+
+        setDropdown('prof-style', data.photography_style);
+        setDropdown('prof-client', data.client_type);
+        setDropdown('prof-tone', data.instagram_tone);
+        setDropdown('prof-lang', data.language_preference);
+        setDropdown('prof-city', data.city);
+
+    } catch (error) {
+        console.log('Profile load failed', error);
+    }
+}
+
+function setDropdown(id, value) {
+    if (!value) return;
+    const select = document.getElementById(id);
+    for (let option of select.options) {
+        if (option.value.toLowerCase() === value.toLowerCase() ||
+            option.text.toLowerCase().includes(value.toLowerCase()) ||
+            value.toLowerCase().includes(option.value.toLowerCase())) {
+            select.value = option.value;
+            break;
+        }
+    }
+}
+
+async function saveProfile() {
+    try {
+        const response = await fetch('/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                brand_name: document.getElementById('prof-brand').value,
+                photography_style: document.getElementById('prof-style').value,
+                client_type: document.getElementById('prof-client').value,
+                instagram_tone: document.getElementById('prof-tone').value,
+                language_preference: document.getElementById('prof-lang').value,
+                city: document.getElementById('prof-city').value,
+                sample_captions: document.getElementById('prof-samples').value
+            })
+        });
+        const data = await response.json();
+        if (data.message) {
+            document.getElementById('profile-save-msg').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('profile-save-msg').style.display = 'none';
+            }, 3000);
+        }
+    } catch (error) {
+        alert('Something went wrong.');
+    }
+}
+
+async function checkOnboarding() {
+    try {
+        const response = await fetch('/get-profile');
+        const data = await response.json();
+        if (!data.onboarding_done) {
+            document.getElementById('onboarding-modal').classList.add('active');
+        }
+        if (data.brand_name) {
+            document.getElementById('brand-name-display').textContent = `Welcome, ${data.brand_name}!`;
+        }
+    } catch (error) {
+        console.log('Onboarding check failed');
+    }
+}
+
+async function generateCaption() {
+    const desc = document.getElementById('photo-desc').value.trim();
+    if (!desc) { alert('Please describe your photo first'); return; }
+    showLoading('caption');
+    try {
+        const response = await fetch('/generate-caption', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: desc })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('caption', data.caption);
+        document.getElementById('copy-caption').style.display = 'inline-block';
+    } catch (error) {
+        showResult('caption', 'Something went wrong. Please try again.');
+    }
+}
+
+async function generateHashtags() {
+    const type = document.getElementById('photo-type').value;
+    const city = document.getElementById('city').value;
+    showLoading('hashtag');
+    try {
+        const response = await fetch('/generate-hashtags', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, city })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('hashtag', data.hashtags);
+        document.getElementById('copy-hashtag').style.display = 'inline-block';
+    } catch (error) {
+        showResult('hashtag', 'Something went wrong. Please try again.');
+    }
+}
+
+async function generateAd() {
+    const service = document.getElementById('service-input').value.trim();
+    const audience = document.getElementById('audience-input').value.trim();
+    if (!service || !audience) { alert('Please fill in both fields'); return; }
+    showLoading('ad');
+    try {
+        const response = await fetch('/generate-ad', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ service, audience })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('ad', data.ad_copy);
+        document.getElementById('copy-ad').style.display = 'inline-block';
+    } catch (error) {
+        showResult('ad', 'Something went wrong. Please try again.');
+    }
+}
+
+async function generateCalendar() {
+    const business = document.getElementById('cal-business').value;
+    const city = document.getElementById('cal-city').value;
+    const month = document.getElementById('cal-month').value;
+    showLoading('calendar');
+    try {
+        const response = await fetch('/generate-calendar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ business_type: business, city: city, month: month })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('calendar', data.calendar);
+        document.getElementById('copy-calendar').style.display = 'inline-block';
+    } catch (error) {
+        showResult('calendar', 'Something went wrong. Please try again.');
+    }
+}
+
+async function generateDM() {
+    const inquiryType = document.getElementById('inquiry-type').value;
+    const clientMessage = document.getElementById('client-message').value.trim();
+    if (!clientMessage) { alert('Please paste the client message first'); return; }
+    showLoading('dm');
+    try {
+        const response = await fetch('/generate-dm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inquiry_type: inquiryType, client_message: clientMessage })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('dm', data.dm_response);
+        document.getElementById('copy-dm').style.display = 'inline-block';
+    } catch (error) {
+        showResult('dm', 'Something went wrong. Please try again.');
+    }
+}
+
+async function getPostingTime() {
+    const business = document.getElementById('ptime-business').value.trim();
+    const audience = document.getElementById('ptime-audience').value.trim();
+    const city = document.getElementById('ptime-city').value;
+    if (!business || !audience) { alert('Please fill in all fields'); return; }
+    showLoading('ptime');
+    try {
+        const response = await fetch('/best-posting-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ business_type: business, target_audience: audience, city: city })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('ptime', data.posting_times);
+        document.getElementById('copy-ptime').style.display = 'inline-block';
+    } catch (error) {
+        showResult('ptime', 'Something went wrong. Please try again.');
+    }
+}
+
+async function analyzeCompetitor() {
+    const handle = document.getElementById('competitor-handle').value.trim();
+    const business = document.getElementById('your-business').value.trim();
+    const city = document.getElementById('competitor-city').value;
+    if (!handle || !business) { alert('Please fill in all fields'); return; }
+    showLoading('competitor');
+    try {
+        const response = await fetch('/competitor-analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competitor_handle: handle, your_business: business, city: city })
+        });
+        const data = await response.json();
+        if (data.error) { handleError(data.error); return; }
+        showResult('competitor', data.analysis);
+        document.getElementById('copy-competitor').style.display = 'inline-block';
+    } catch (error) {
+        showResult('competitor', 'Something went wrong. Please try again.');
+    }
+}
+
+function handleError(error) {
+    if (error === 'trial_expired' || error === 'limit_reached') {
+        window.location.href = '/pricing';
+    } else {
+        alert('Something went wrong: ' + error);
+    }
+}
+
+function showLoading(type) {
+    document.getElementById(`${type}-loading`).style.display = 'block';
+    document.getElementById(`${type}-result`).style.display = 'none';
+}
+
+function showResult(type, text) {
+    document.getElementById(`${type}-loading`).style.display = 'none';
+    const result = document.getElementById(`${type}-result`);
+    result.style.display = 'block';
+    result.textContent = text;
+}
+
+function copyResult(elementId) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+    });
+}
+
+async function loadUsage() {
+    try {
+        const response = await fetch('/check-access');
+        const data = await response.json();
+        const badge = document.getElementById('usage-badge');
+        const banner = document.getElementById('trial-banner');
+        const bannerText = document.getElementById('trial-banner-text');
+
+        if (data.is_admin) {
+            document.getElementById('admin-link').style.display = 'inline-block';
+        }
+
+        if (data.plan === 'trial') {
+            badge.textContent = `Trial: ${data.days_remaining} days left | ${data.generations_used}/${data.generations_limit} uses`;
+            badge.style.color = data.days_remaining <= 2 ? '#e53935' : '#888';
+            if (data.days_remaining <= 3) {
+                banner.style.display = 'flex';
+                bannerText.textContent = `⚠️ Your trial expires in ${data.days_remaining} days. Upgrade to keep access.`;
+            }
+        } else {
+            badge.textContent = `${data.plan.toUpperCase()} | ${data.generations_used}/${data.generations_limit} uses`;
+            badge.style.color = '#888';
+        }
+    } catch (error) {
+        console.log('Usage check failed');
+    }
+}
+
+loadUsage();
+checkOnboarding();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 22px; font-weight: 600; color: #6C63FF; }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+        .container h2 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+        .container p { color: #888; margin-bottom: 40px; }
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        .plan {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 24px;
+            border: 1px solid #eee;
+            text-align: left;
+        }
+        .plan.popular {
+            border: 2px solid #6C63FF;
+            position: relative;
+        }
+        .badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #6C63FF;
+            color: white;
+            font-size: 12px;
+            padding: 4px 16px;
+            border-radius: 20px;
+        }
+        .plan-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .plan-price { font-size: 32px; font-weight: 700; color: #6C63FF; margin-bottom: 4px; }
+        .plan-price span { font-size: 14px; font-weight: 400; color: #888; }
+        .plan-desc { font-size: 13px; color: #888; margin-bottom: 20px; }
+        .features { list-style: none; margin-bottom: 24px; }
+        .features li {
+            font-size: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .features li::before { content: "✓"; color: #6C63FF; font-weight: 600; }
+        .plan-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 500;
+            background: #6C63FF;
+            color: white;
+        }
+        .plan-btn:hover { background: #5a52d5; }
+        .plan-btn.outline {
+            background: white;
+            border: 1px solid #6C63FF;
+            color: #6C63FF;
+        }
+        .plan-btn.outline:hover { background: #f8f7ff; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal-box h3 { font-size: 20px; margin-bottom: 12px; }
+        .modal-box p { color: #888; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .modal-box button {
+            width: 100%;
+            padding: 12px;
+            background: #6C63FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .modal-close {
+            background: white !important;
+            color: #888 !important;
+            border: 1px solid #eee !important;
+        }
+        @media (max-width: 600px) {
+            .plans { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>ReachUp AI</h1>
+    <a href="/" style="font-size: 13px; color: #888; text-decoration: none; 
+        border: 1px solid #eee; padding: 6px 14px; border-radius: 8px;">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="container">
+    <h2>Simple, Honest Pricing</h2>
+    <p>Start free. Upgrade when you're ready. Cancel anytime.</p>
+
+    <div class="plans">
+
+        <div class="plan">
+            <div class="plan-name">Trial</div>
+            <div class="plan-price">Free <span>/ 7 days</span></div>
+            <div class="plan-desc">Try everything before you pay</div>
+            <ul class="features">
+                <li>20 AI generations</li>
+                <li>All 7 features included</li>
+                <li>Caption generator</li>
+                <li>Hashtag engine</li>
+                <li>Content calendar</li>
+            </ul>
+            <button class="plan-btn outline" disabled>Current Plan</button>
+        </div>
+
+        <div class="plan popular">
+            <div class="badge">Most Popular</div>
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">PKR 8,000 <span>/ month</span></div>
+            <div class="plan-desc">Perfect for individual photographers</div>
+            <ul class="features">
+                <li>200 AI generations/month</li>
+                <li>All 7 features</li>
+                <li>Caption generator</li>
+                <li>Hashtag engine</li>
+                <li>Content calendar</li>
+                <li>DM response generator</li>
+                <li>Competitor analysis</li>
+            </ul>
+            <button class="plan-btn" onclick="requestUpgrade('Starter - PKR 8,000/month')">
+                Get Starter
+            </button>
+        </div>
+
+        <div class="plan">
+            <div class="plan-name">Pro</div>
+            <div class="plan-price">PKR 15,000 <span>/ month</span></div>
+            <div class="plan-desc">For studios and agencies</div>
+            <ul class="features">
+                <li>Unlimited AI generations</li>
+                <li>All 7 features</li>
+                <li>Priority support</li>
+                <li>Multiple business profiles</li>
+                <li>Caption generator</li>
+                <li>Hashtag engine</li>
+                <li>Content calendar</li>
+                <li>DM response generator</li>
+                <li>Competitor analysis</li>
+            </ul>
+            <button class="plan-btn" onclick="requestUpgrade('Pro - PKR 15,000/month')">
+                Get Pro
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal" id="upgrade-modal">
+    <div class="modal-box">
+        <h3>Almost there!</h3>
+        <p id="modal-message"></p>
+        <button onclick="closeModal()">Got it!</button>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+async function requestUpgrade(plan) {
+    try {
+        const response = await fetch('/upgrade-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: plan })
+        });
+        const data = await response.json();
+        document.getElementById('modal-message').textContent = data.message;
+        document.getElementById('upgrade-modal').classList.add('active');
+    } catch (error) {
+        alert('Something went wrong. Please try again.');
+    }
+}
+
+function closeModal() {
+    document.getElementById('upgrade-modal').classList.remove('active');
+}
+</script>
+
+</body>
+</html>

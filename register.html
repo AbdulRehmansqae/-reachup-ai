@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid #eee;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 { font-size: 22px; font-weight: 600; color: #6C63FF; margin-bottom: 6px; }
+        p { font-size: 14px; color: #888; margin-bottom: 24px; }
+        label { font-size: 13px; color: #555; display: block; margin-bottom: 6px; }
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            background: #fafafa;
+        }
+        button {
+            width: 100%;
+            background: #6C63FF;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover { background: #5a52d5; }
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #888;
+        }
+        .link a { color: #6C63FF; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>ReachUp AI</h1>
+    <p>Create your free account</p>
+
+    <form method="POST">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="Sara Ahmed" required />
+
+        <label>Email</label>
+        <input type="email" name="email" placeholder="your@email.com" required />
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Create a password" required />
+
+        <label>Business Type</label>
+        <select name="business_type">
+            <option>Wedding Photography</option>
+            <option>Portrait Photography</option>
+            <option>Travel Business</option>
+            <option>Salon</option>
+            <option>Other</option>
+        </select>
+
+        <label>Your City</label>
+        <select name="city">
+            <option>Lahore</option>
+            <option>Karachi</option>
+            <option>Islamabad</option>
+            <option>Dubai</option>
+            <option>London</option>
+            <option>Other</option>
+        </select>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+    <div class="link">
+        Already have an account? <a href="/login">Login here</a>
+    </div>
+</div>
+</body>
+</html>

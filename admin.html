@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 22px; font-weight: 600; color: #6C63FF; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 600;
+            color: #6C63FF;
+            margin-bottom: 4px;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #888;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            font-weight: 500;
+            color: #555;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge.trial { background: #fff8e1; color: #f59e0b; }
+        .badge.starter { background: #e8f5e9; color: #16a34a; }
+        .badge.pro { background: #ede9fe; color: #6C63FF; }
+        select {
+            padding: 6px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        .btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary { background: #6C63FF; color: white; }
+        .btn-primary:hover { background: #5a52d5; }
+        .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-danger:hover { background: #fecaca; }
+        .search-bar {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            background: #fafafa;
+        }
+        .revenue { color: #16a34a; font-weight: 600; }
+        @media (max-width: 768px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            table { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>ReachUp AI — Admin Panel</h1>
+    <div style="display: flex; gap: 12px;">
+        <a href="/" style="font-size: 13px; color: #888; text-decoration: none; 
+            border: 1px solid #eee; padding: 6px 14px; border-radius: 8px;">
+            Dashboard
+        </a>
+        <a href="/logout" style="font-size: 13px; color: #888; text-decoration: none; 
+            border: 1px solid #eee; padding: 6px 14px; border-radius: 8px;">
+            Logout
+        </a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">{{ total_users }}</div>
+            <div class="label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ trial_users }}</div>
+            <div class="label">On Trial</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ starter_users }}</div>
+            <div class="label">Starter Plan</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ pro_users }}</div>
+            <div class="label">Pro Plan</div>
+        </div>
+        <div class="stat-card">
+            <div class="number revenue">PKR {{ "{:,}".format(monthly_revenue) }}</div>
+            <div class="label">Monthly Revenue</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>All Users</h2>
+        <input 
+            type="text" 
+            class="search-bar" 
+            id="search-input"
+            placeholder="Search by name or email..."
+            onkeyup="filterUsers()" />
+
+        <table id="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Business</th>
+                    <th>City</th>
+                    <th>Plan</th>
+                    <th>Generations</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr id="user-row-{{ user.id }}">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.business_type }}</td>
+                    <td>{{ user.city }}</td>
+                    <td>
+                        <span class="badge {{ user.plan }}">{{ user.plan.upper() }}</span>
+                    </td>
+                    <td>{{ user.generations_used }}</td>
+                    <td>{{ user.trial_start.strftime('%d %b %Y') }}</td>
+                    <td style="display: flex; gap: 6px; align-items: center;">
+                        <select id="plan-select-{{ user.id }}">
+                            <option value="trial" {% if user.plan == 'trial' %}selected{% endif %}>Trial</option>
+                            <option value="starter" {% if user.plan == 'starter' %}selected{% endif %}>Starter</option>
+                            <option value="pro" {% if user.plan == 'pro' %}selected{% endif %}>Pro</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="upgradeUser({{ user.id }})">Save</button>
+                        {% if not user.is_admin %}
+                        <button class="btn btn-danger" onclick="deleteUser({{ user.id }}, '{{ user.name }}')">Delete</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+async function upgradeUser(userId) {
+    const plan = document.getElementById(`plan-select-${userId}`).value;
+    
+    try {
+        const response = await fetch('/admin/upgrade-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, plan: plan })
+        });
+        const data = await response.json();
+        if (data.message) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Something went wrong');
+    }
+}
+
+async function deleteUser(userId, userName) {
+    if (!confirm(`Are you sure you want to delete ${userName}? This cannot be undone.`)) return;
+
+    try {
+        const response = await fetch('/admin/delete-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        });
+        const data = await response.json();
+        if (data.message) {
+            document.getElementById(`user-row-${userId}`).remove();
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Something went wrong');
+    }
+}
+
+function filterUsers() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const rows = document.querySelectorAll('#users-table tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+}
+</script>
+
+</body>
+</html>

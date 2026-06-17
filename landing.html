@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReachUp AI - AI Social Media Growth for Wedding Photographers</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; color: #333; line-height: 1.6; }
+        
+        .navbar {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar h1 { font-size: 22px; font-weight: 600; color: #6C63FF; }
+        .navbar a {
+            color: #6C63FF;
+            text-decoration: none;
+            padding: 8px 20px;
+            border: 1px solid #6C63FF;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .navbar a:hover { background: #f8f7ff; }
+
+        .hero {
+            background: linear-gradient(135deg, #6C63FF 0%, #5a52d5 100%);
+            color: white;
+            padding: 80px 40px;
+            text-align: center;
+        }
+        .hero h2 { font-size: 48px; font-weight: 700; margin-bottom: 16px; }
+        .hero p { font-size: 18px; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; opacity: 0.95; }
+        .hero-btn {
+            background: white;
+            color: #6C63FF;
+            padding: 14px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .hero-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+        .problem {
+            background: #fff8e1;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .problem h3 { font-size: 32px; font-weight: 700; margin-bottom: 24px; color: #333; }
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .problem-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #ffe082;
+        }
+        .problem-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #d32f2f; }
+        .problem-card p { font-size: 14px; color: #666; }
+
+        .solution {
+            padding: 80px 40px;
+            background: white;
+        }
+        .solution h3 { font-size: 32px; font-weight: 700; margin-bottom: 48px; text-align: center; }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .feature {
+            display: flex;
+            gap: 16px;
+        }
+        .feature-icon { font-size: 32px; min-width: 40px; }
+        .feature h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .feature p { font-size: 14px; color: #666; }
+
+        .proof {
+            background: #f8f9fa;
+            padding: 60px 40px;
+        }
+        .proof h3 { font-size: 32px; font-weight: 700; margin-bottom: 48px; text-align: center; }
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .testimonial {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+        .testimonial-text { font-size: 14px; color: #666; margin-bottom: 16px; }
+        .testimonial-author { font-weight: 600; font-size: 14px; color: #333; }
+        .testimonial-role { font-size: 12px; color: #888; }
+
+        .pricing {
+            padding: 80px 40px;
+            background: white;
+        }
+        .pricing h3 { font-size: 32px; font-weight: 700; margin-bottom: 48px; text-align: center; }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+        }
+        .pricing-card.popular {
+            border: 2px solid #6C63FF;
+            transform: scale(1.05);
+        }
+        .pricing-name { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+        .pricing-price { font-size: 36px; font-weight: 700; color: #6C63FF; margin-bottom: 4px; }
+        .pricing-period { font-size: 13px; color: #888; margin-bottom: 24px; }
+        .pricing-feature {
+            font-size: 13px;
+            color: #666;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .pricing-feature:last-child { border-bottom: none; }
+        .pricing-btn {
+            background: #6C63FF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .pricing-btn:hover { background: #5a52d5; }
+
+        .cta {
+            background: linear-gradient(135deg, #6C63FF 0%, #5a52d5 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .cta h3 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+        .cta p { font-size: 16px; margin-bottom: 24px; }
+        .cta-btn {
+            background: white;
+            color: #6C63FF;
+            padding: 14px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .cta-btn:hover { transform: translateY(-2px); }
+
+        .footer {
+            background: #1a1a1a;
+            color: #999;
+            padding: 40px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h2 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            .problem-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .testimonials { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .pricing-card.popular { transform: scale(1); }
+            .navbar { padding: 16px 20px; }
+            .navbar h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <h1>🎯 ReachUp AI</h1>
+    <a href="/login">Login</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h2>Get Real Instagram Reach<br>Without Spending on Ads</h2>
+    <p>AI-powered social media growth tool built specifically for wedding photographers. Generate captions, hashtags, content calendars, and DM responses that actually convert inquiries into bookings.</p>
+    <a href="/register" class="hero-btn">Start Free 7-Day Trial →</a>
+</div>
+
+<!-- PROBLEM -->
+<div class="problem">
+    <h3>The Problem Wedding Photographers Face</h3>
+    <div class="problem-grid">
+        <div class="problem-card">
+            <h4>💀 Dead Organic Reach</h4>
+            <p>Instagram's algorithm has killed organic reach. Your posts get lost even with 5k followers.</p>
+        </div>
+        <div class="problem-card">
+            <h4>💸 Expensive Ads</h4>
+            <p>Boosting posts costs money ($5-20 per post) with no guaranteed bookings or ROI.</p>
+        </div>
+        <div class="problem-card">
+            <h4>⏰ Time Consuming</h4>
+            <p>Creating captions, hashtags, content plans takes hours every month.</p>
+        </div>
+    </div>
+</div>
+
+<!-- SOLUTION -->
+<div class="solution">
+    <h3>The ReachUp AI Solution</h3>
+    <div class="features-grid">
+        <div class="feature">
+            <div class="feature-icon">✨</div>
+            <div>
+                <h4>AI Caption Generator</h4>
+                <p>Emotional, engagement-hook captions written in YOUR voice. Not generic AI.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">#️⃣</div>
+            <div>
+                <h4>Smart Hashtag Engine</h4>
+                <p>Perfect mix of small/medium/large hashtags specifically for your city and style.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">📅</div>
+            <div>
+                <h4>Monthly Content Calendar</h4>
+                <p>4 weeks of ready-to-post ideas (Reels, Carousels, Photos, Stories).</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">📢</div>
+            <div>
+                <h4>Ad Copy Generator</h4>
+                <p>High-converting Facebook/Instagram ads that target your ideal couples.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">💬</div>
+            <div>
+                <h4>DM Response Generator</h4>
+                <p>Turn inquiries into bookings with perfect DM responses written in your tone.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">⏰</div>
+            <div>
+                <h4>Posting Time Optimizer</h4>
+                <p>Know exactly when to post for maximum reach in your city.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROOF -->
+<div class="proof">
+    <h3>What Photographers Are Saying</h3>
+    <div class="testimonials">
+        <div class="testimonial">
+            <div class="testimonial-text">"ReachUp saved me 5 hours a week on content creation. The AI captions feel like I wrote them myself."</div>
+            <div class="testimonial-author">Ahmed Khan</div>
+            <div class="testimonial-role">Wedding Photographer, Lahore</div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-text">"I got 3 bookings in the first week using the DM response generator. Total game-changer."</div>
+            <div class="testimonial-author">Sara Ali</div>
+            <div class="testimonial-role">Portrait Photographer, Karachi</div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-text">"The hashtag engine gets me 2x more reach than my old approach. Best investment ever."</div>
+            <div class="testimonial-author">Noor Studios</div>
+            <div class="testimonial-role">Wedding Studio, Dubai</div>
+        </div>
+    </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing">
+    <h3>Simple Pricing. No Tricks.</h3>
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <div class="pricing-name">Trial</div>
+            <div class="pricing-price">Free</div>
+            <div class="pricing-period">7 days</div>
+            <div class="pricing-feature">20 AI generations</div>
+            <div class="pricing-feature">All 7 features</div>
+            <div class="pricing-feature">Full access</div>
+            <button class="pricing-btn" onclick="window.location.href='/register'">Start Now</button>
+        </div>
+        <div class="pricing-card popular">
+            <div class="pricing-name">Starter</div>
+            <div class="pricing-price">PKR 8,000</div>
+            <div class="pricing-period">per month</div>
+            <div class="pricing-feature">200 generations/month</div>
+            <div class="pricing-feature">All 7 features</div>
+            <div class="pricing-feature">Email support</div>
+            <button class="pricing-btn" onclick="window.location.href='/register'">Start Free Trial</button>
+        </div>
+        <div class="pricing-card">
+            <div class="pricing-name">Pro</div>
+            <div class="pricing-price">PKR 15,000</div>
+            <div class="pricing-period">per month</div>
+            <div class="pricing-feature">Unlimited generations</div>
+            <div class="pricing-feature">All 7 features</div>
+            <div class="pricing-feature">Priority support</div>
+            <button class="pricing-btn" onclick="window.location.href='/register'">Start Free Trial</button>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+    <h3>Ready to Get More Bookings?</h3>
+    <p>Join 100+ wedding photographers already using ReachUp AI</p>
+    <a href="/register" class="cta-btn">Start Your 7-Day Free Trial →</a>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <p>&copy; 2024 ReachUp AI. Built for wedding photographers. Made in Pakistan.</p>
+</div>
+
+</body>
+</html>
