@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiry - ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar a {
+            color: #6C63FF;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 28px;
+        }
+        
+        .btn {
+            background: #6C63FF;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5a52d5;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #6C63FF;
+            padding-bottom: 12px;
+        }
+        
+        .inquiry-info {
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .client-message {
+            background: #f9f9f9;
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid #6C63FF;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-responded {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-booked {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .ai-response {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #6C63FF;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .copy-btn {
+            background: #4caf50;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .action-btn-primary {
+            background: #6C63FF;
+            color: white;
+        }
+        
+        .action-btn-primary:hover {
+            background: #5a52d5;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6C63FF;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/inquiries">← Back to Inquiries</a>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>{{ inquiry.client_name }}</h1>
+        <span class="status-badge status-{{ inquiry.status }}">{{ inquiry.status.upper() }}</span>
+    </div>
+    
+    <div class="content">
+        <div class="card">
+            <h2>Client Inquiry</h2>
+            
+            <div class="inquiry-info">
+                <div class="info-row">
+                    <span class="info-label">Received</span>
+                    <span class="info-value">{{ inquiry.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+                {% if inquiry.wedding_date %}
+                <div class="info-row">
+                    <span class="info-label">Wedding Date</span>
+                    <span class="info-value">{{ inquiry.wedding_date }}</span>
+                </div>
+                {% endif %}
+                {% if inquiry.budget_mentioned %}
+                <div class="info-row">
+                    <span class="info-label">Budget Mentioned</span>
+                    <span class="info-value">{{ inquiry.budget_mentioned }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="client-message">
+                {{ inquiry.client_message }}
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>AI-Suggested Response</h2>
+            
+            {% if inquiry.ai_response %}
+                <div class="ai-response">{{ inquiry.ai_response }}</div>
+                <button class="copy-btn" onclick="copyResponse()">📋 Copy Response</button>
+            {% else %}
+                <p style="color: #999; margin-bottom: 20px;">No response generated yet. Click below to generate one.</p>
+            {% endif %}
+            
+            <button class="action-btn action-btn-primary" style="width: 100%;" onclick="generateResponse()">
+                <span id="generateText">Generate Response</span>
+                <div class="spinner" id="loadingSpinner" style="display: none;"></div>
+            </button>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+                <h3 style="margin-bottom: 20px;">Mark as Booked</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 500;">Booking Value (PKR or $)</label>
+                    <input type="number" id="bookingAmount" placeholder="e.g., 150000" step="1000" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;">
+                </div>
+                
+                <div class="actions">
+                    <button class="action-btn action-btn-primary" onclick="markBooked()">✓ Mark Booked</button>
+                    <button class="action-btn" style="background: #f44336; color: white;" onclick="markRejected()">✗ Not Interested</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyResponse() {
+    const responseText = document.querySelector('.ai-response').textContent;
+    navigator.clipboard.writeText(responseText).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 2000);
+    });
+}
+
+function generateResponse() {
+    const btn = event.target;
+    const generateText = document.getElementById('generateText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    generateText.style.display = 'none';
+    loadingSpinner.style.display = 'block';
+    
+    fetch(`/inquiry/{{ inquiry.id }}/response`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const aiResponseDiv = document.querySelector('.ai-response');
+            if (!aiResponseDiv) {
+                const p = document.querySelector('p');
+                p.style.display = 'none';
+                const div = document.createElement('div');
+                div.className = 'ai-response';
+                div.textContent = data.response;
+                p.parentNode.insertBefore(div, p.nextSibling);
+            } else {
+                aiResponseDiv.textContent = data.response;
+            }
+        }
+    })
+    .finally(() => {
+        generateText.style.display = 'inline';
+        loadingSpinner.style.display = 'none';
+    });
+}
+
+function markBooked() {
+    const bookingValue = document.getElementById('bookingAmount').value;
+    
+    fetch(`/inquiry/{{ inquiry.id }}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            status: 'booked',
+            booking_value: bookingValue || null
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function markRejected() {
+    fetch(`/inquiry/{{ inquiry.id }}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            status: 'rejected'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+
+</body>
+</html>

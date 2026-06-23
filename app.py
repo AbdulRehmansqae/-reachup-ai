@@ -9,9 +9,11 @@ from pathlib import Path
 from datetime import datetime
 from functools import wraps
 from threading import Thread
+from instagrapi import Client
 import random
 import os
 import logging
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 # ---------------- LOAD .env ----------------
@@ -86,7 +88,23 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+# ==================== INQUIRY MODEL ====================
 
+class Inquiry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    client_name = db.Column(db.String(100), nullable=False)
+    client_message = db.Column(db.Text, nullable=False)
+    wedding_date = db.Column(db.String(50), nullable=True)
+    budget_mentioned = db.Column(db.String(100), nullable=True)
+    ai_response = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), default='pending')  # pending, responded, booked, rejected
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    responded_at = db.Column(db.DateTime, nullable=True)
+    booking_value = db.Column(db.Float, nullable=True)
+    
+    def __repr__(self):
+        return f'<Inquiry {self.client_name}>'
 
 # ---------------- HELPERS ----------------
 def get_unique_seed():
@@ -285,7 +303,138 @@ def send_upgrade_confirmation_email(user, plan):
     text_body = f"Your upgrade request for {plan} plan received! We will contact you in 24 hours.\n\nReachUp AI Team"
     send_email(subject, [user.email], text_body, html_body)
 
+# ==================== INSTAGRAM HEALTH SCORE ====================
 
+from instagrapi import Client
+
+def analyze_instagram_profile(username):
+    """Analyze Instagram profile and return health metrics"""
+    try:
+        client = Client()
+        user = client.user_info_by_username(username)
+        
+        user_id = user.pk
+        medias = client.user_medias(user_id, amount=30)  # Get last 30 posts
+        
+        # Calculate metrics
+        follower_count = user.follower_count
+        total_posts = user.media_count
+        
+        # Calculate engagement
+        total_likes = 0
+        total_comments = 0
+        caption_lengths = []
+        hashtag_counts = []
+        
+        for media in medias:
+            total_likes += media.like_count
+            total_comments += media.comments_count
+            caption_lengths.append(len(media.caption) if media.caption else 0)
+            hashtag_count = (media.caption.count('#') if media.caption else 0)
+            hashtag_counts.append(hashtag_count)
+        
+        avg_likes = total_likes / len(medias) if medias else 0
+        avg_comments = total_comments / len(medias) if medias else 0
+        avg_engagement = (avg_likes + avg_comments) / follower_count * 100 if follower_count > 0 else 0
+        avg_caption_length = sum(caption_lengths) / len(caption_lengths) if caption_lengths else 0
+        avg_hashtags = sum(hashtag_counts) / len(hashtag_counts) if hashtag_counts else 0
+        
+        # Calculate health score (0-100)
+        engagement_score = min(avg_engagement * 20, 30)  # Max 30 points
+        posting_frequency_score = min((total_posts / 365) * 10, 20)  # Max 20 points (posts per day)
+        caption_quality_score = min((avg_caption_length / 300) * 20, 20)  # Max 20 points
+        hashtag_score = min((avg_hashtags / 10) * 15, 15)  # Max 15 points
+        consistency_score = 15  # Default 15 points
+        
+        health_score = int(engagement_score + posting_frequency_score + caption_quality_score + hashtag_score + consistency_score)
+        health_score = min(health_score, 100)  # Cap at 100
+        
+        metrics = {
+            "username": username,
+            "follower_count": follower_count,
+            "total_posts": total_posts,
+            "avg_likes": round(avg_likes, 1),
+            "avg_comments": round(avg_comments, 1),
+            "engagement_rate": round(avg_engagement, 2),
+            "avg_caption_length": round(avg_caption_length, 0),
+            "avg_hashtags": round(avg_hashtags, 1),
+            "health_score": health_score,
+            "status": "success"
+        }
+        
+        return metrics
+    
+    except Exception as e:
+        app.logger.error(f"[INSTAGRAM ANALYSIS] Error analyzing {username}: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Could not analyze profile. Make sure the account is public: {str(e)}"
+        }
+
+
+def get_health_score_feedback(metrics):
+    """Generate feedback based on health score"""
+    score = metrics.get("health_score", 0)
+    
+    feedbacks = {
+        "engagement": "Low engagement rate" if metrics.get("engagement_rate", 0) < 2 else "Good engagement",
+        "posting": "Post too infrequently" if metrics.get("total_posts", 0) < 50 else "Good posting frequency",
+        "captions": "Captions are too short" if metrics.get("avg_caption_length", 0) < 100 else "Good caption length",
+        "hashtags": "Using too few hashtags" if metrics.get("avg_hashtags", 0) < 5 else "Good hashtag usage"
+    }
+    
+    recommendations = []
+    if metrics.get("engagement_rate", 0) < 2:
+        recommendations.append("Increase engagement by responding to comments faster")
+    if metrics.get("total_posts", 0) < 50:
+        recommendations.append("Post more frequently (at least 3-4 times per week)")
+    if metrics.get("avg_caption_length", 0) < 100:
+        recommendations.append("Write longer, more engaging captions")
+    if metrics.get("avg_hashtags", 0) < 5:
+        recommendations.append("Use more relevant hashtags (10-15 per post)")
+    
+    return {
+        "feedbacks": feedbacks,
+        "recommendations": recommendations
+    }
+# ==================== INQUIRY RESPONSE GENERATOR ====================
+
+def generate_inquiry_response(user, inquiry_message):
+    """Generate personalized response to inquiry using user's style"""
+    try:
+        client = get_groq_client()
+        
+        # Get user's style profile
+        style_prompt = f"""
+You are helping a wedding photographer respond to a client inquiry.
+The photographer's style: {user.photography_style or 'Professional'}
+Their preferred tone: {user.instagram_tone or 'Friendly and professional'}
+
+Client's inquiry:
+{inquiry_message}
+
+Generate a warm, professional response that:
+1. Thanks the client for reaching out
+2. Asks qualifying questions (date, venue, guest count, style preference)
+3. Suggests a call/WhatsApp conversation
+4. Includes photographer's name/brand if relevant
+5. Matches their style and tone
+
+Make it personalized, NOT generic. Keep it 2-3 short paragraphs.
+"""
+        
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": style_prompt}],
+            max_tokens=300,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        app.logger.error(f"[INQUIRY] Error generating response: {str(e)}")
+        return "Thank you for reaching out! I'd love to discuss your wedding photography needs. Please tell me more about your event date and style preferences. Let's chat via WhatsApp/call to discuss further!"
 # ==================== ROUTES ====================
 
 # ---------------- HOME ----------------
@@ -1022,8 +1171,203 @@ def admin_delete_user():
     except Exception as e:
         app.logger.error(f"[ADMIN] ERROR - {current_user.email}: {str(e)}")
         return jsonify({"error": str(e)}), 500
+# ==================== HEALTH SCORE ROUTES ====================
+
+@app.route("/health-score")
+def health_score_page():
+    """Display Instagram health score input page"""
+    return render_template("healthscore.html")  # Change this line
 
 
+@app.route("/analyze-instagram", methods=["POST"])
+def analyze_instagram():
+    """Analyze Instagram profile"""
+    try:
+        data = request.json
+        username = data.get("username", "").strip()
+        
+        if not username:
+            return jsonify({"error": "Please enter an Instagram username"}), 400
+        
+        app.logger.info(f"[HEALTH SCORE] Analyzing: {username}")
+        
+        # Analyze profile
+        metrics = analyze_instagram_profile(username)
+        
+        if metrics.get("status") == "error":
+            app.logger.warning(f"[HEALTH SCORE] Error analyzing {username}")
+            return jsonify({"error": metrics.get("message")}), 400
+        
+        # Get feedback
+        feedback = get_health_score_feedback(metrics)
+        metrics.update(feedback)
+        
+        app.logger.info(f"[HEALTH SCORE] OK Analyzed: {username} (Score: {metrics['health_score']})")
+        
+        return jsonify(metrics)
+    
+    except Exception as e:
+        app.logger.error(f"[HEALTH SCORE] ERROR: {str(e)}")
+        return jsonify({"error": "An error occurred. Please try again."}), 500
+# ==================== INQUIRY ROUTES ====================
+
+@app.route("/inquiries")
+@login_required
+def inquiries_dashboard():
+    """View all inquiries"""
+    inquiries = Inquiry.query.filter_by(user_id=current_user.id).order_by(Inquiry.created_at.desc()).all()
+    
+    # Calculate stats
+    total_inquiries = len(inquiries)
+    booked = len([i for i in inquiries if i.status == 'booked'])
+    pending = len([i for i in inquiries if i.status == 'pending'])
+    conversion_rate = (booked / total_inquiries * 100) if total_inquiries > 0 else 0
+    
+    stats = {
+        "total": total_inquiries,
+        "booked": booked,
+        "pending": pending,
+        "conversion_rate": round(conversion_rate, 1)
+    }
+    
+    app.logger.info(f"[INQUIRIES] Dashboard accessed by user {current_user.email}")
+    
+    return render_template("inquiries.html", inquiries=inquiries, stats=stats)
+
+
+@app.route("/inquiry/new", methods=["GET", "POST"])
+@login_required
+def new_inquiry():
+    """Create new inquiry"""
+    if request.method == "POST":
+        try:
+            data = request.json
+            client_name = data.get('client_name', '').strip()
+            client_message = data.get('client_message', '').strip()
+            wedding_date = data.get('wedding_date', '').strip()
+            budget = data.get('budget', '').strip()
+            
+            if not client_name or not client_message:
+                return jsonify({"error": "Name and message required"}), 400
+            
+            # Create inquiry
+            inquiry = Inquiry(
+                user_id=current_user.id,
+                client_name=client_name,
+                client_message=client_message,
+                wedding_date=wedding_date or None,
+                budget_mentioned=budget or None
+            )
+            db.session.add(inquiry)
+            db.session.commit()
+            
+            app.logger.info(f"[INQUIRIES] New inquiry created for {current_user.email}: {client_name}")
+            
+            return jsonify({
+                "success": True,
+                "inquiry_id": inquiry.id,
+                "message": "Inquiry saved!"
+            })
+        
+        except Exception as e:
+            app.logger.error(f"[INQUIRIES] Error creating inquiry: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+    
+    return render_template("new_inquiry.html")
+
+
+@app.route("/inquiry/<int:inquiry_id>/response", methods=["POST"])
+@login_required
+def generate_response(inquiry_id):
+    """Generate AI response for inquiry"""
+    try:
+        inquiry = Inquiry.query.get_or_404(inquiry_id)
+        
+        if inquiry.user_id != current_user.id:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        # Generate response
+        response = generate_inquiry_response(current_user, inquiry.client_message)
+        inquiry.ai_response = response
+        db.session.commit()
+        
+        app.logger.info(f"[INQUIRIES] Response generated for inquiry {inquiry_id}")
+        
+        return jsonify({
+            "success": True,
+            "response": response
+        })
+    
+    except Exception as e:
+        app.logger.error(f"[INQUIRIES] Error generating response: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/inquiry/<int:inquiry_id>/status", methods=["POST"])
+@login_required
+def update_inquiry_status(inquiry_id):
+    """Update inquiry status"""
+    try:
+        inquiry = Inquiry.query.get_or_404(inquiry_id)
+        
+        if inquiry.user_id != current_user.id:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        data = request.json
+        new_status = data.get('status')
+        booking_value = data.get('booking_value')
+        
+        if new_status not in ['pending', 'responded', 'booked', 'rejected']:
+            return jsonify({"error": "Invalid status"}), 400
+        
+        inquiry.status = new_status
+        if new_status == 'responded':
+            inquiry.responded_at = datetime.datetime.now()
+        if booking_value:
+            inquiry.booking_value = float(booking_value)
+        
+        db.session.commit()
+        
+        app.logger.info(f"[INQUIRIES] Inquiry {inquiry_id} status updated to {new_status}")
+        
+        return jsonify({"success": True, "message": "Status updated!"})
+    
+    except Exception as e:
+        app.logger.error(f"[INQUIRIES] Error updating status: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/inquiry/<int:inquiry_id>/delete", methods=["POST"])
+@login_required
+def delete_inquiry(inquiry_id):
+    """Delete inquiry"""
+    try:
+        inquiry = Inquiry.query.get_or_404(inquiry_id)
+        
+        if inquiry.user_id != current_user.id:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        db.session.delete(inquiry)
+        db.session.commit()
+        
+        app.logger.info(f"[INQUIRIES] Inquiry {inquiry_id} deleted")
+        
+        return jsonify({"success": True, "message": "Inquiry deleted!"})
+    
+    except Exception as e:
+        app.logger.error(f"[INQUIRIES] Error deleting inquiry: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/inquiry/<int:inquiry_id>")
+@login_required
+def view_inquiry(inquiry_id):
+    """View single inquiry"""
+    inquiry = Inquiry.query.get_or_404(inquiry_id)
+    
+    if inquiry.user_id != current_user.id:
+        return redirect("/inquiries")
+    
+    return render_template("inquiry_detail.html", inquiry=inquiry)
 # ==================== DATABASE + RUN ====================
 with app.app_context():
     db.create_all()

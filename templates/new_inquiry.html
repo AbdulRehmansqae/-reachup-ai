@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Inquiry - ReachUp AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #6C63FF 0%, #5a52d5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .navbar {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 40px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Segoe UI', sans-serif;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #6C63FF;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            background: #6C63FF;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #5a52d5;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            color: #d32f2f;
+            margin-top: 16px;
+            padding: 12px;
+            background: #ffebee;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .success {
+            color: #2e7d32;
+            margin-top: 16px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6C63FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info {
+            background: #f0f4ff;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #6C63FF;
+            border-left: 4px solid #6C63FF;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/inquiries">← Back to Inquiries</a>
+</div>
+
+<div class="container">
+    <h1>📧 New Inquiry</h1>
+    <p class="subtitle">Add a client inquiry and get AI-powered response suggestions</p>
+    
+    <div class="info">
+        Paste the client's message exactly as they sent it. Our AI will suggest a personalized response based on your style.
+    </div>
+    
+    <form id="inquiryForm">
+        <div class="form-group">
+            <label for="client_name">Client Name *</label>
+            <input type="text" id="client_name" name="client_name" placeholder="e.g., John & Sarah" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="client_message">Client Message *</label>
+            <textarea id="client_message" name="client_message" placeholder="Paste the client's inquiry here..." required></textarea>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="wedding_date">Wedding Date (if mentioned)</label>
+                <input type="text" id="wedding_date" name="wedding_date" placeholder="e.g., Nov 15, 2024">
+            </div>
+            
+            <div class="form-group">
+                <label for="budget">Budget (if mentioned)</label>
+                <input type="text" id="budget" name="budget" placeholder="e.g., PKR 150,000">
+            </div>
+        </div>
+        
+        <button type="submit" class="btn" id="submitBtn">Save Inquiry</button>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Saving inquiry...</p>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('inquiryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const clientName = document.getElementById('client_name').value.trim();
+    const clientMessage = document.getElementById('client_message').value.trim();
+    const weddingDate = document.getElementById('wedding_date').value.trim();
+    const budget = document.getElementById('budget').value.trim();
+    
+    const errorDiv = document.getElementById('error');
+    const successDiv = document.getElementById('success');
+    const loadingDiv = document.getElementById('loading');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    if (!clientName || !clientMessage) {
+        errorDiv.textContent = 'Please fill in all required fields';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    loadingDiv.style.display = 'block';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/inquiry/new', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_name: clientName,
+                client_message: clientMessage,
+                wedding_date: weddingDate,
+                budget: budget
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            successDiv.textContent = 'Inquiry saved! Redirecting...';
+            successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                window.location.href = `/inquiry/${data.inquiry_id}`;
+            }, 1500);
+        } else {
+            throw new Error(data.error || 'Error saving inquiry');
+        }
+        
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        submitBtn.disabled = false;
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+    }
+});
+</script>
+
+</body>
+</html>
