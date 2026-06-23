@@ -1024,7 +1024,42 @@ def check_access():
         "is_admin": current_user.is_admin
     })
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return '''
+    <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: Arial;">
+        <h1>Privacy Policy</h1>
+        <p>We collect your Instagram handle (for analysis), email and password (for login), and inquiry data (client messages you input).</p>
+        <p>Your data is encrypted and secure. Never shared with third parties. Deleted on request.</p>
+        <p>Contact: abdulrehmansqae@gmail.com</p>
+    </div>
+    '''
 
+@app.route("/terms-conditions")
+def terms_conditions():
+    return '''
+    <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: Arial;">
+        <h1>Terms & Conditions</h1>
+        <ol>
+            <li>Users must be 18+ years old</li>
+            <li>Account is for personal/business use only</li>
+            <li>No automated scraping of data</li>
+            <li>Monthly subscription auto-renews</li>
+            <li>Cancel anytime from dashboard</li>
+        </ol>
+        <p>Contact: abdulrehmansqae@gmail.com</p>
+    </div>
+    '''
+
+@app.route("/refund-policy")
+def refund_policy():
+    return '''
+    <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: Arial;">
+        <h1>Refund Policy</h1>
+        <p>7-day money-back guarantee. Full refund if service not used.</p>
+        <p>To request refund, email: abdulrehmansqae@gmail.com</p>
+    </div>
+    '''
 # ---------------- ONBOARDING ----------------
 @app.route("/onboarding", methods=["POST"])
 @login_required
